@@ -27,3 +27,5 @@ npx wrangler secret put MAPTILER_API_KEY
 For the Git-connected Cloudflare project, use `exit 0` as its Build command and
 `npx wrangler deploy` as its Deploy command. The Worker routes `/api/*` requests
 to the recipe code and serves all other files as static website assets.
+
+meow meow
