@@ -1,8 +1,8 @@
 # Where We Eat
 
-Minimal map-based recipe prototype. Click the map to set a city pin, add a recipe,
+Minimal map-based recipe prototype. Search for a country and city, add a recipe,
 and click a saved marker to view it. It deploys as a Cloudflare Worker with static
-assets, so the Worker can access the database and image storage.
+assets. `public/` holds browser files and `src/worker.js` holds server code.
 
 ## Cloudflare setup
 

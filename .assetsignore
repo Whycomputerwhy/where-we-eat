@@ -1,7 +1,0 @@
-.DS_Store
-.git/
-README.md
-functions/
-migrations/
-worker.js
-wrangler.toml

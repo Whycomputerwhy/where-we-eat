@@ -40,7 +40,7 @@ main,
   resize: vertical;
 }
 
-#pin-instruction,
+#location-instruction,
 #form-status {
   margin: 0;
   font-size: 0.9rem;
