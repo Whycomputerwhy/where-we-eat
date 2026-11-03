@@ -1,0 +1,12 @@
+name = "where-we-eat"
+compatibility_date = "2026-11-02"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "RECIPES_DB"
+database_name = "where-we-eat-recipe-submissions"
+database_id = "5b5ccd55-3c7d-462a-856c-09258e07484a"
+
+[[r2_buckets]]
+binding = "RECIPE_IMAGES"
+bucket_name = "where-we-eat-recipe-images"

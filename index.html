@@ -10,6 +10,39 @@
   <body>
     <main>
       <div id="map" aria-label="Interactive world map"></div>
+      <aside class="entry-panel">
+        <form id="recipe-form">
+          <p id="pin-instruction">Click the map to place this recipe's city pin.</p>
+
+          <label>
+            Country
+            <input name="country" required />
+          </label>
+          <label>
+            City
+            <input name="city" required />
+          </label>
+          <label>
+            Recipe name
+            <input name="recipeName" required />
+          </label>
+          <label>
+            Ingredients
+            <textarea name="ingredients" required></textarea>
+          </label>
+          <label>
+            Instructions
+            <textarea name="instructions" required></textarea>
+          </label>
+          <label>
+            Photos
+            <input name="photos" type="file" accept="image/*" multiple />
+          </label>
+
+          <button type="submit">Add recipe</button>
+          <p id="form-status" aria-live="polite"></p>
+        </form>
+      </aside>
     </main>
     <script type="module" src="./map.js"></script>
   </body>

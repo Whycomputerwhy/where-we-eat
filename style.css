@@ -6,3 +6,62 @@ main,
   height: 100%;
   margin: 0;
 }
+
+.entry-panel {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  width: min(280px, calc(100vw - 48px));
+  padding: 12px;
+  background: white;
+}
+
+#recipe-form,
+#recipe-form label {
+  display: grid;
+  gap: 6px;
+}
+
+#recipe-form {
+  gap: 10px;
+}
+
+#recipe-form input,
+#recipe-form textarea,
+#recipe-form button {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+}
+
+#recipe-form textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+#pin-instruction,
+#form-status {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.recipe-popup {
+  max-width: 240px;
+}
+
+.recipe-popup h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.recipe-popup p {
+  margin: 6px 0;
+  white-space: pre-line;
+}
+
+.recipe-popup img {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
