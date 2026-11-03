@@ -12,15 +12,17 @@
       <div id="map" aria-label="Interactive world map"></div>
       <aside class="entry-panel">
         <form id="recipe-form">
-          <p id="pin-instruction">Click the map to place this recipe's city pin.</p>
+          <p id="location-instruction">Search for a country, then select a city.</p>
 
           <label>
             Country
-            <input name="country" required />
+            <input id="country" name="country" list="country-options" autocomplete="off" required />
+            <datalist id="country-options"></datalist>
           </label>
           <label>
             City
-            <input name="city" required />
+            <input id="city" name="city" list="city-options" autocomplete="off" disabled required />
+            <datalist id="city-options"></datalist>
           </label>
           <label>
             Recipe name

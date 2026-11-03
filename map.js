@@ -18,10 +18,19 @@ map.addControl(new maplibregl.NavigationControl(), "top-right");
 
 const form = document.querySelector("#recipe-form");
 const status = document.querySelector("#form-status");
-const pinInstruction = document.querySelector("#pin-instruction");
+const locationInstruction = document.querySelector("#location-instruction");
+const countryInput = document.querySelector("#country");
+const cityInput = document.querySelector("#city");
+const countryOptions = document.querySelector("#country-options");
+const cityOptions = document.querySelector("#city-options");
 let selectedLocation;
 let selectedMarker;
 let recipeMarkers = [];
+let selectedCountry;
+let countryResults = [];
+let cityResults = [];
+let countrySearchTimer;
+let citySearchTimer;
 
 function createRecipePopup(recipe) {
   const content = document.createElement("article");
@@ -67,19 +76,103 @@ async function loadRecipes() {
   );
 }
 
-map.on("click", (event) => {
-  selectedLocation = event.lngLat;
+function showSelectedCity(city) {
+  selectedLocation = { lat: city.latitude, lng: city.longitude };
   selectedMarker?.remove();
   selectedMarker = new maplibregl.Marker({ color: "#d97706" })
     .setLngLat(selectedLocation)
     .addTo(map);
-  pinInstruction.textContent = `Pin set: ${selectedLocation.lat.toFixed(3)}, ${selectedLocation.lng.toFixed(3)}`;
+  map.flyTo({ center: selectedLocation, zoom: 5 });
+  locationInstruction.textContent = `Location selected: ${city.city}, ${city.country}.`;
+}
+
+function fillOptions(element, results, field) {
+  element.replaceChildren(
+    ...results.map((result) => {
+      const option = document.createElement("option");
+      option.value = result[field];
+      return option;
+    }),
+  );
+}
+
+async function searchLocations(kind, query, countryCode) {
+  const parameters = new URLSearchParams({ kind, q: query });
+  if (countryCode) parameters.set("country", countryCode);
+  const response = await fetch(`/api/locations?${parameters}`);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Could not search locations.");
+  return result;
+}
+
+countryInput.addEventListener("input", () => {
+  selectedCountry = undefined;
+  selectedLocation = undefined;
+  cityInput.value = "";
+  cityInput.disabled = true;
+  cityOptions.replaceChildren();
+  clearTimeout(countrySearchTimer);
+  if (countryInput.value.trim().length < 2) return;
+
+  countrySearchTimer = setTimeout(async () => {
+    try {
+      countryResults = await searchLocations("country", countryInput.value.trim());
+      fillOptions(countryOptions, countryResults, "country");
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  }, 250);
+});
+
+countryInput.addEventListener("change", () => {
+  selectedCountry = countryResults.find(
+    (country) => country.country === countryInput.value,
+  );
+  if (!selectedCountry) {
+    status.textContent = "Choose a country from the suggested list.";
+    cityInput.disabled = true;
+    return;
+  }
+  status.textContent = "";
+  cityInput.disabled = false;
+  cityInput.focus();
+  locationInstruction.textContent = `Country selected: ${selectedCountry.country}. Search for a city.`;
+});
+
+cityInput.addEventListener("input", () => {
+  selectedLocation = undefined;
+  selectedMarker?.remove();
+  clearTimeout(citySearchTimer);
+  if (!selectedCountry || cityInput.value.trim().length < 2) return;
+
+  citySearchTimer = setTimeout(async () => {
+    try {
+      cityResults = await searchLocations(
+        "city",
+        cityInput.value.trim(),
+        selectedCountry.countryCode,
+      );
+      fillOptions(cityOptions, cityResults, "city");
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  }, 250);
+});
+
+cityInput.addEventListener("change", () => {
+  const selectedCity = cityResults.find((city) => city.city === cityInput.value);
+  if (!selectedCity) {
+    status.textContent = "Choose a city from the suggested list.";
+    return;
+  }
+  status.textContent = "";
+  showSelectedCity(selectedCity);
 });
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!selectedLocation) {
-    status.textContent = "Click the map to place the recipe pin first.";
+    status.textContent = "Choose a country and city from the suggested lists first.";
     return;
   }
 
@@ -102,7 +195,13 @@ form.addEventListener("submit", async (event) => {
     selectedMarker?.remove();
     selectedMarker = undefined;
     selectedLocation = undefined;
-    pinInstruction.textContent = "Click the map to place this recipe's city pin.";
+    selectedCountry = undefined;
+    countryResults = [];
+    cityResults = [];
+    cityInput.disabled = true;
+    countryOptions.replaceChildren();
+    cityOptions.replaceChildren();
+    locationInstruction.textContent = "Search for a country, then select a city.";
     status.textContent = "Recipe added.";
     await loadRecipes();
   } catch (error) {

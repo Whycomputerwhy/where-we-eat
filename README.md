@@ -17,6 +17,13 @@ Before the first deployment, create the recipe table with:
 npx wrangler d1 execute where-we-eat-recipe-submissions --remote --file=migrations/0001_recipes.sql
 ```
 
+Country and city search uses MapTiler's geocoding API. Add a MapTiler API key as
+a Cloudflare Worker secret (never place it in the website files):
+
+```sh
+npx wrangler secret put MAPTILER_API_KEY
+```
+
 For the Git-connected Cloudflare project, use `exit 0` as its Build command and
 `npx wrangler deploy` as its Deploy command. The Worker routes `/api/*` requests
 to the recipe code and serves all other files as static website assets.
