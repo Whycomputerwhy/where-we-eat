@@ -1,7 +1,8 @@
 # Where We Eat
 
 Minimal map-based recipe prototype. Click the map to set a city pin, add a recipe,
-and click a saved marker to view it.
+and click a saved marker to view it. It deploys as a Cloudflare Worker with static
+assets, so the Worker can access the database and image storage.
 
 ## Cloudflare setup
 
@@ -16,5 +17,6 @@ Before the first deployment, create the recipe table with:
 npx wrangler d1 execute where-we-eat-recipe-submissions --remote --file=migrations/0001_recipes.sql
 ```
 
-Deploy this repository to Cloudflare Pages. The Pages Functions in `functions/api/`
-handle listing recipes, accepting entries and images, and serving images from R2.
+For the Git-connected Cloudflare project, use `exit 0` as its Build command and
+`npx wrangler deploy` as its Deploy command. The Worker routes `/api/*` requests
+to the recipe code and serves all other files as static website assets.
