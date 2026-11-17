@@ -65,3 +65,121 @@ main,
   width: 100%;
   margin-top: 8px;
 }
+
+/* NPC Introduction */
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9999;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  padding: 30px;
+}
+
+.intro-overlay[hidden] {
+  display: none;
+}
+
+.dialogue-box {
+  width: min(800px, 100%);
+  min-height: 180px;
+
+  background: #fff8e7;
+  border: 3px solid #654b38;
+  border-radius: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 24px;
+  margin-bottom: 30px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+#npc-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.dialogue-content {
+  flex: 1;
+}
+
+#npc-name {
+  color: #805437;
+  margin: 0 0 12px;
+}
+
+#npc-text {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #333;
+}
+
+#next-dialogue {
+  display: block;
+  margin-left: auto;
+
+  background: #e6a65d;
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+
+  cursor: pointer;
+}
+
+#next-dialogue:hover {
+  background: #d58b3e;
+}
+
+@media (max-width: 600px) {
+  .intro-overlay {
+    padding: 12px;
+  }
+
+  .dialogue-box {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  #npc-image {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+#dialogue-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.choice-button {
+  padding: 10px 14px;
+  background: #fff0d2;
+  color: #654b38;
+  border: 2px solid #d5ae79;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.choice-button:hover {
+  background: #f5d7a3;
+}
+
+#next-dialogue[hidden] {
+  display: none;
+}
