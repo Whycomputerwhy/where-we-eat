@@ -121,16 +121,16 @@ function showDialogue() {
   npcText.textContent = line.text;
 
   // Switch images when introducing Munchers
-  if (line.text.includes("KING MUNCHER")) {
-    npcImage.src = "./images/king-muncher.png";
-  } else if (
-    line.text.includes("A MUNCHER!") ||
-    line.text.includes("turns into a Muncher!")
-  ) {
-    npcImage.src = "./images/muncher.png";
-  } else {
-    npcImage.src = "./images/food-spirit.png";
-  }
+if (line.text.includes("KING MUNCHER")) {
+  npcImage.src = "./king-muncher.png";
+} else if (
+  line.text.includes("A MUNCHER!") ||
+  line.text.includes("turns into a Muncher!")
+) {
+  npcImage.src = "./muncher.png";
+} else {
+  npcImage.src = "./food-spirit.png";
+}
 
   const isLastLine =
     currentScene === "Backstory" &&
