@@ -39,6 +39,12 @@ function createRecipePopup(recipe) {
   title.textContent = recipe.recipe_name;
   content.append(title);
 
+  if (recipe.submitter_name) {
+    const submitter = document.createElement("p");
+    submitter.textContent = `Submitted by: ${recipe.submitter_name}`;
+    content.append(submitter);
+  }
+
   for (const [label, value] of [["Location", `${recipe.city}, ${recipe.country}`], ["Ingredients", recipe.ingredients], ["Instructions", recipe.instructions]]) {
     const paragraph = document.createElement("p");
     paragraph.textContent = `${label}: ${value}`;

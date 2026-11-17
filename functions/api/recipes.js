@@ -11,7 +11,7 @@ function photoUrl(key) {
 
 export async function onRequestGet({ env }) {
   const { results } = await env.RECIPES_DB.prepare(
-    `SELECT id, country, city, recipe_name, ingredients, instructions,
+    `SELECT id, country, city, recipe_name, submitter_name, ingredients, instructions,
             latitude, longitude, photo_keys, created_at
        FROM recipes
        ORDER BY created_at DESC`,
@@ -30,6 +30,7 @@ export async function onRequestPost({ request, env }) {
   const country = form.get("country")?.trim();
   const city = form.get("city")?.trim();
   const recipeName = form.get("recipeName")?.trim();
+  const submitterName = form.get("submitterName")?.trim() || null;
   const ingredients = form.get("ingredients")?.trim();
   const instructions = form.get("instructions")?.trim();
   const latitude = Number(form.get("latitude"));
@@ -59,15 +60,16 @@ export async function onRequestPost({ request, env }) {
   const id = crypto.randomUUID();
   await env.RECIPES_DB.prepare(
     `INSERT INTO recipes (
-      id, country, city, recipe_name, ingredients, instructions,
+      id, country, city, recipe_name, submitter_name, ingredients, instructions,
       latitude, longitude, photo_keys
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       id,
       country,
       city,
       recipeName,
+      submitterName,
       ingredients,
       instructions,
       latitude,
