@@ -4,6 +4,14 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 // functions/api/recipes.js
 var MAX_PHOTOS = 4;
 var MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+var DISPLAYABLE_IMAGE_TYPES = /* @__PURE__ */ new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif"
+]);
+var HEIC_IMAGE_TYPES = /* @__PURE__ */ new Set(["image/heic", "image/heif"]);
 function json(data, options = {}) {
   return Response.json(data, options);
 }
@@ -12,6 +20,35 @@ function photoUrl(key) {
   return `/api/images/${encodeURIComponent(key)}`;
 }
 __name(photoUrl, "photoUrl");
+async function convertHeicToJpg(photo, env) {
+  if (!env.HEIC_JPG_API_KEY) {
+    throw new Error("HEIC conversion has not been configured.");
+  }
+  const conversionForm = new FormData();
+  conversionForm.append("File", photo, photo.name);
+  conversionForm.append("StoreFile", "true");
+  const conversionResponse = await fetch("https://v2.convertapi.com/convert/heic/to/jpg", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.HEIC_JPG_API_KEY}` },
+    body: conversionForm
+  });
+  if (!conversionResponse.ok) {
+    throw new Error("Could not convert the HEIC photo. Please try a JPG or PNG instead.");
+  }
+  const conversion = await conversionResponse.json();
+  const downloadUrl = conversion.Files?.[0]?.Url || conversion.Files?.[0]?.FileUrl;
+  if (!downloadUrl) {
+    throw new Error("The converted HEIC photo was unavailable. Please try a JPG or PNG instead.");
+  }
+  const imageResponse = await fetch(downloadUrl, {
+    headers: { Authorization: `Bearer ${env.HEIC_JPG_API_KEY}` }
+  });
+  if (!imageResponse.ok) {
+    throw new Error("Could not retrieve the converted HEIC photo. Please try again.");
+  }
+  return imageResponse.body;
+}
+__name(convertHeicToJpg, "convertHeicToJpg");
 async function onRequestGet({ env }) {
   const { results } = await env.RECIPES_DB.prepare(
     `SELECT id, country, city, recipe_name, submitter_name, ingredients, instructions,
@@ -44,15 +81,19 @@ async function onRequestPost({ request, env }) {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
     return json({ error: "Choose a valid map location." }, { status: 400 });
   }
-  if (photos.length > MAX_PHOTOS || photos.some((photo) => !photo.type.startsWith("image/") || photo.size > MAX_PHOTO_SIZE)) {
+  if (photos.length > MAX_PHOTOS || photos.some((photo) => photo.size > MAX_PHOTO_SIZE)) {
     return json({ error: "Add up to four image files, each no larger than 5 MB." }, { status: 400 });
+  }
+  if (photos.some((photo) => !DISPLAYABLE_IMAGE_TYPES.has(photo.type) && !HEIC_IMAGE_TYPES.has(photo.type))) {
+    return json({ error: "Photos must be JPG, PNG, WebP, GIF, AVIF, HEIC, or HEIF files." }, { status: 400 });
   }
   const photoKeys = [];
   for (const photo of photos) {
-    const extension = photo.type.split("/")[1] || "image";
+    const isHeic = HEIC_IMAGE_TYPES.has(photo.type);
+    const extension = isHeic ? "jpg" : photo.type.split("/")[1];
     const key = `${crypto.randomUUID()}.${extension}`;
-    await env.RECIPE_IMAGES.put(key, photo.stream(), {
-      httpMetadata: { contentType: photo.type }
+    await env.RECIPE_IMAGES.put(key, isHeic ? await convertHeicToJpg(photo, env) : photo.stream(), {
+      httpMetadata: { contentType: isHeic ? "image/jpeg" : photo.type }
     });
     photoKeys.push(key);
   }
