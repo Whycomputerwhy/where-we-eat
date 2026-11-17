@@ -172,7 +172,13 @@ function nextDialogue() {
 
 nextButton.addEventListener("click", nextDialogue);
 
-if (localStorage.getItem("whereWeEatIntroSeen") !== "true") {
-  overlay.hidden = false;
-  showDialogue();
+function startIntro() {
+  if (localStorage.getItem("whereWeEatIntroSeen") !== "true") {
+    currentScene = "Start";
+    currentIndex = 0;
+    overlay.hidden = false;
+    showDialogue();
+  }
 }
+
+document.addEventListener("splashFinished", startIntro);
