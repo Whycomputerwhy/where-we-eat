@@ -183,3 +183,42 @@ main,
 #next-dialogue[hidden] {
   display: none;
 }
+
+/* Logo Splash Screen */
+
+#splash-screen {
+  position: fixed;
+  inset: 0;
+  background: #fff1d8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+#splash-screen img {
+  width: min(65vw, 400px);
+  height: auto;
+
+  animation: logoAppear 1.2s ease-out;
+}
+
+@keyframes logoAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#splash-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
