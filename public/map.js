@@ -55,12 +55,37 @@ function createRecipePopup(recipe) {
   return new maplibregl.Popup({ offset: 20 }).setDOMContent(content);
 }
 
+function spreadOverlappingPins(recipes) {
+  const groups = new Map();
+  for (const recipe of recipes) {
+    const key = `${Number(recipe.longitude).toFixed(5)},${Number(recipe.latitude).toFixed(5)}`;
+    const group = groups.get(key) || [];
+    group.push(recipe);
+    groups.set(key, group);
+  }
+
+  return [...groups.values()].flatMap((group) => group.map((recipe, index) => {
+    if (group.length === 1) return { recipe, offset: [0, 0] };
+    const angle = index * 2.4;
+    const radius = 22 + Math.sqrt(index) * 14;
+    return {
+      recipe,
+      offset: [Math.cos(angle) * radius, Math.sin(angle) * radius],
+    };
+  }));
+}
+
 async function loadRecipes() {
   const response = await fetch("/api/recipes");
   if (!response.ok) throw new Error("Could not load recipes.");
   const recipes = await readJson(response);
   recipeMarkers.forEach((marker) => marker.remove());
-  recipeMarkers = recipes.map((recipe) => new maplibregl.Marker().setLngLat([recipe.longitude, recipe.latitude]).setPopup(createRecipePopup(recipe)).addTo(map));
+  recipeMarkers = spreadOverlappingPins(recipes).map(({ recipe, offset }) => (
+    new maplibregl.Marker({ offset })
+      .setLngLat([recipe.longitude, recipe.latitude])
+      .setPopup(createRecipePopup(recipe))
+      .addTo(map)
+  ));
 }
 
 function hideOptions(input, options) {
