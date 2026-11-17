@@ -40,6 +40,42 @@ main,
   resize: vertical;
 }
 
+.location-search {
+  position: relative;
+}
+
+.location-options {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #999;
+  background: white;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.location-option {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-bottom: 1px solid #eee;
+  background: white;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.location-option:hover,
+.location-option:focus {
+  background: #f1f1f1;
+}
+
 #location-instruction,
 #form-status {
   margin: 0;

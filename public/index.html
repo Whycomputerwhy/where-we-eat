@@ -12,25 +12,23 @@
       <div id="map" aria-label="Interactive world map"></div>
       <aside class="entry-panel">
         <form id="recipe-form">
-          <p id="location-instruction">Search for a country, then select a city.</p>
-
           <label>
-            Country
-            <input id="country" name="country" list="country-options" autocomplete="off" required />
-            <datalist id="country-options"></datalist>
+            Country or Region
+            <span class="location-search">
+              <input id="country" name="country" autocomplete="off" aria-autocomplete="list" aria-controls="country-options" aria-expanded="false" required />
+              <span id="country-options" class="location-options" role="listbox" hidden></span>
+            </span>
           </label>
           <label>
             City
-            <input id="city" name="city" list="city-options" autocomplete="off" disabled required />
-            <datalist id="city-options"></datalist>
+            <span class="location-search">
+              <input id="city" name="city" autocomplete="off" aria-autocomplete="list" aria-controls="city-options" aria-expanded="false" disabled required />
+              <span id="city-options" class="location-options" role="listbox" hidden></span>
+            </span>
           </label>
           <label>
             Recipe name
             <input name="recipeName" required />
-          </label>
-          <label>
-            Your name (optional)
-            <input name="submitterName" autocomplete="name" />
           </label>
           <label>
             Ingredients
