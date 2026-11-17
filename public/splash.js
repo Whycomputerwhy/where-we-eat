@@ -1,17 +1,18 @@
 const splash = document.getElementById("splash-screen");
 
+function finishSplash() {
+  splash?.remove();
+
+  // Tell the NPC system that the logo animation is finished
+  document.dispatchEvent(new Event("splashFinished"));
+}
+
 if (splash) {
-  console.log("Splash screen found!");
-
   setTimeout(() => {
-    console.log("Starting fade out...");
-
     splash.classList.add("fade-out");
 
-    setTimeout(() => {
-      splash.remove();
-      console.log("Splash screen removed!");
-    }, 800);
-
+    setTimeout(finishSplash, 800);
   }, 1800);
+} else {
+  finishSplash();
 }
