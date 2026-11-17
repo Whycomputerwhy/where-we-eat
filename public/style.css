@@ -93,7 +93,7 @@ main,
 
 .recipe-popup p {
   margin: 6px 0;
-  white-space: pre-line;
+  white-space: pre-wrap;
 }
 
 .recipe-popup img {

@@ -89,13 +89,18 @@ async function onRequestPost({ request, env }) {
   }
   const photoKeys = [];
   for (const photo of photos) {
-    const isHeic = HEIC_IMAGE_TYPES.has(photo.type);
-    const extension = isHeic ? "jpg" : photo.type.split("/")[1];
-    const key = `${crypto.randomUUID()}.${extension}`;
-    await env.RECIPE_IMAGES.put(key, isHeic ? await convertHeicToJpg(photo, env) : photo.stream(), {
-      httpMetadata: { contentType: isHeic ? "image/jpeg" : photo.type }
-    });
-    photoKeys.push(key);
+    try {
+      const isHeic = HEIC_IMAGE_TYPES.has(photo.type);
+      const extension = isHeic ? "jpg" : photo.type.split("/")[1];
+      const key = `${crypto.randomUUID()}.${extension}`;
+      await env.RECIPE_IMAGES.put(key, isHeic ? await convertHeicToJpg(photo, env) : photo.stream(), {
+        httpMetadata: { contentType: isHeic ? "image/jpeg" : photo.type }
+      });
+      photoKeys.push(key);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save the photo.";
+      return json({ error: message }, { status: 502 });
+    }
   }
   const id = crypto.randomUUID();
   await env.RECIPES_DB.prepare(
@@ -242,7 +247,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-Tm0qam/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-MkLqiZ/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -274,7 +279,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-Tm0qam/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-MkLqiZ/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

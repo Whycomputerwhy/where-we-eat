@@ -21,6 +21,15 @@ let selectedCountry;
 let countrySearchTimer;
 let citySearchTimer;
 
+async function readJson(response) {
+  const body = await response.text();
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error("The server returned an HTML error page. Run the site with \"npx wrangler dev\" locally, or confirm the deployed Worker is serving this site.");
+  }
+}
+
 function createRecipePopup(recipe) {
   const content = document.createElement("article");
   content.className = "recipe-popup";
@@ -49,7 +58,7 @@ function createRecipePopup(recipe) {
 async function loadRecipes() {
   const response = await fetch("/api/recipes");
   if (!response.ok) throw new Error("Could not load recipes.");
-  const recipes = await response.json();
+  const recipes = await readJson(response);
   recipeMarkers.forEach((marker) => marker.remove());
   recipeMarkers = recipes.map((recipe) => new maplibregl.Marker().setLngLat([recipe.longitude, recipe.latitude]).setPopup(createRecipePopup(recipe)).addTo(map));
 }
@@ -78,7 +87,7 @@ async function searchLocations(kind, query, countryCode) {
   const parameters = new URLSearchParams({ kind, q: query });
   if (countryCode) parameters.set("country", countryCode);
   const response = await fetch(`/api/locations?${parameters}`);
-  const result = await response.json();
+  const result = await readJson(response);
   if (!response.ok) throw new Error(result.error || "Could not search locations.");
   return result;
 }
@@ -175,7 +184,7 @@ form.addEventListener("submit", async (event) => {
   status.textContent = "Saving recipe…";
   try {
     const response = await fetch("/api/recipes", { method: "POST", body: formData });
-    const result = await response.json();
+    const result = await readJson(response);
     if (!response.ok) throw new Error(result.error || "Could not save recipe.");
     form.reset();
     selectedMarker?.remove();

@@ -89,13 +89,18 @@ export async function onRequestPost({ request, env }) {
 
   const photoKeys = [];
   for (const photo of photos) {
-    const isHeic = HEIC_IMAGE_TYPES.has(photo.type);
-    const extension = isHeic ? "jpg" : photo.type.split("/")[1];
-    const key = `${crypto.randomUUID()}.${extension}`;
-    await env.RECIPE_IMAGES.put(key, isHeic ? await convertHeicToJpg(photo, env) : photo.stream(), {
-      httpMetadata: { contentType: isHeic ? "image/jpeg" : photo.type },
-    });
-    photoKeys.push(key);
+    try {
+      const isHeic = HEIC_IMAGE_TYPES.has(photo.type);
+      const extension = isHeic ? "jpg" : photo.type.split("/")[1];
+      const key = `${crypto.randomUUID()}.${extension}`;
+      await env.RECIPE_IMAGES.put(key, isHeic ? await convertHeicToJpg(photo, env) : photo.stream(), {
+        httpMetadata: { contentType: isHeic ? "image/jpeg" : photo.type },
+      });
+      photoKeys.push(key);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save the photo.";
+      return json({ error: message }, { status: 502 });
+    }
   }
 
   const id = crypto.randomUUID();
