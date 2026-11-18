@@ -9,17 +9,48 @@ map.addControl(new maplibregl.NavigationControl(), "top-right");
 
 const form = document.querySelector("#recipe-form");
 const status = document.querySelector("#form-status");
-const locationInstruction = document.querySelector("#location-instruction");
+const entryPanel = document.querySelector(".entry-panel");
+const mapViewButton = document.querySelector("#map-view-button");
+const addRecipeButton = document.querySelector("#add-recipe-button");
 const countryInput = document.querySelector("#country");
 const cityInput = document.querySelector("#city");
 const countryOptions = document.querySelector("#country-options");
 const cityOptions = document.querySelector("#city-options");
+const recipeOverlay = document.querySelector("#recipe-overlay");
+const closeRecipeView = document.querySelector("#close-recipe-view");
+const recipeViewTitle = document.querySelector("#recipe-view-title");
+const recipeViewLocation = document.querySelector("#recipe-view-location");
+const recipeViewSubmitter = document.querySelector("#recipe-view-submitter");
+const recipeViewPhotos = document.querySelector("#recipe-view-photos");
+const recipeViewIngredients = document.querySelector("#recipe-view-ingredients");
+const recipeViewInstructions = document.querySelector("#recipe-view-instructions");
 let selectedLocation;
 let selectedMarker;
 let recipeMarkers = [];
 let selectedCountry;
 let countrySearchTimer;
 let citySearchTimer;
+let lastFocusedElement;
+
+function showMapView() {
+  entryPanel.classList.remove("is-open");
+  entryPanel.setAttribute("aria-hidden", "true");
+  mapViewButton.classList.add("is-active");
+  mapViewButton.setAttribute("aria-pressed", "true");
+  addRecipeButton.classList.remove("is-active");
+  addRecipeButton.setAttribute("aria-pressed", "false");
+  if (recipeOverlay.classList.contains("is-open")) closeRecipeOverlay();
+}
+
+function showAddRecipePanel() {
+  entryPanel.classList.add("is-open");
+  entryPanel.setAttribute("aria-hidden", "false");
+  mapViewButton.classList.remove("is-active");
+  mapViewButton.setAttribute("aria-pressed", "false");
+  addRecipeButton.classList.add("is-active");
+  addRecipeButton.setAttribute("aria-pressed", "true");
+  countryInput.focus();
+}
 
 async function readJson(response) {
   const body = await response.text();
@@ -30,29 +61,36 @@ async function readJson(response) {
   }
 }
 
-function createRecipePopup(recipe) {
-  const content = document.createElement("article");
-  content.className = "recipe-popup";
-  const title = document.createElement("h2");
-  title.textContent = recipe.recipe_name;
-  content.append(title);
-  if (recipe.submitter_name) {
-    const submitter = document.createElement("p");
-    submitter.textContent = `Submitted by: ${recipe.submitter_name}`;
-    content.append(submitter);
+function openRecipeView(recipe) {
+  lastFocusedElement = document.activeElement;
+  recipeViewTitle.textContent = recipe.recipe_name;
+  recipeViewLocation.textContent = `${recipe.city}, ${recipe.country}`;
+  recipeViewIngredients.textContent = recipe.ingredients;
+  recipeViewInstructions.textContent = recipe.instructions;
+  recipeViewSubmitter.hidden = !recipe.submitter_name;
+  recipeViewSubmitter.textContent = recipe.submitter_name ? `Submitted by: ${recipe.submitter_name}` : "";
+  recipeViewPhotos.replaceChildren();
+  if (recipe.photoUrls.length === 0) {
+    const note = document.createElement("p");
+    note.textContent = "No photos were added.";
+    recipeViewPhotos.append(note);
+  } else {
+    for (const photoUrl of recipe.photoUrls) {
+      const image = document.createElement("img");
+      image.src = photoUrl;
+      image.alt = recipe.recipe_name;
+      recipeViewPhotos.append(image);
+    }
   }
-  for (const [label, value] of [["Location", `${recipe.city}, ${recipe.country}`], ["Ingredients", recipe.ingredients], ["Instructions", recipe.instructions]]) {
-    const paragraph = document.createElement("p");
-    paragraph.textContent = `${label}: ${value}`;
-    content.append(paragraph);
-  }
-  for (const photoUrl of recipe.photoUrls) {
-    const image = document.createElement("img");
-    image.src = photoUrl;
-    image.alt = recipe.recipe_name;
-    content.append(image);
-  }
-  return new maplibregl.Popup({ offset: 20 }).setDOMContent(content);
+  recipeOverlay.classList.add("is-open");
+  recipeOverlay.setAttribute("aria-hidden", "false");
+  closeRecipeView.focus();
+}
+
+function closeRecipeOverlay() {
+  recipeOverlay.classList.remove("is-open");
+  recipeOverlay.setAttribute("aria-hidden", "true");
+  lastFocusedElement?.focus?.();
 }
 
 function spreadOverlappingPins(recipes) {
@@ -80,13 +118,25 @@ async function loadRecipes() {
   if (!response.ok) throw new Error("Could not load recipes.");
   const recipes = await readJson(response);
   recipeMarkers.forEach((marker) => marker.remove());
-  recipeMarkers = spreadOverlappingPins(recipes).map(({ recipe, offset }) => (
-    new maplibregl.Marker({ offset })
+  recipeMarkers = spreadOverlappingPins(recipes).map(({ recipe, offset }) => {
+    const marker = new maplibregl.Marker({ offset })
       .setLngLat([recipe.longitude, recipe.latitude])
-      .setPopup(createRecipePopup(recipe))
-      .addTo(map)
-  ));
+      .addTo(map);
+    marker.getElement().setAttribute("aria-label", `View ${recipe.recipe_name}`);
+    marker.getElement().addEventListener("click", () => openRecipeView(recipe));
+    return marker;
+  });
 }
+
+closeRecipeView.addEventListener("click", closeRecipeOverlay);
+recipeOverlay.addEventListener("click", (event) => {
+  if (event.target === recipeOverlay) closeRecipeOverlay();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && recipeOverlay.classList.contains("is-open")) closeRecipeOverlay();
+});
+mapViewButton.addEventListener("click", showMapView);
+addRecipeButton.addEventListener("click", showAddRecipePanel);
 
 function hideOptions(input, options) {
   options.hidden = true;
@@ -122,7 +172,6 @@ function showSelectedCity(city) {
   selectedMarker?.remove();
   selectedMarker = new maplibregl.Marker({ color: "#d97706" }).setLngLat(selectedLocation).addTo(map);
   map.flyTo({ center: selectedLocation, zoom: 5 });
-  locationInstruction.textContent = `Location selected: ${city.city}, ${selectedCountry.country}.`;
 }
 
 function chooseCountry(country) {
@@ -135,7 +184,6 @@ function chooseCountry(country) {
   hideOptions(countryInput, countryOptions);
   hideOptions(cityInput, cityOptions);
   status.textContent = "";
-  locationInstruction.textContent = `Country selected: ${country.country}. Search for a city.`;
   cityInput.focus();
 }
 
@@ -219,7 +267,6 @@ form.addEventListener("submit", async (event) => {
     cityInput.disabled = true;
     hideOptions(countryInput, countryOptions);
     hideOptions(cityInput, cityOptions);
-    locationInstruction.textContent = "Search for a country, then select a city.";
     status.textContent = "Recipe added.";
     await loadRecipes();
   } catch (error) { status.textContent = error.message; }

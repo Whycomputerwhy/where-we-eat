@@ -13,9 +13,21 @@
     <img src="./logo.png" alt="Where We Eat Logo" />
   </div>
 
+  <header class="site-topbar">
+    <img class="site-logo" src="./logo.png" alt="Where We Eat" />
+    <nav class="topbar-actions" aria-label="Main navigation">
+      <button id="map-view-button" class="topbar-button is-active" type="button" aria-pressed="true">Map</button>
+      <button id="add-recipe-button" class="topbar-button" type="button" aria-pressed="false">Add</button>
+      <button class="profile-preview" type="button" aria-label="JS profile preview">
+        <img src="./food-spirit.png" alt="" />
+        <span>Player</span>
+      </button>
+    </nav>
+  </header>
+
   <main>
       <div id="map" aria-label="Interactive world map"></div>
-      <aside class="entry-panel">
+      <aside class="entry-panel" aria-hidden="true">
         <form id="recipe-form">
           <label>
             Country or Region
@@ -53,6 +65,23 @@
         </form>
       </aside>
     </main>
+    <div id="recipe-overlay" class="recipe-overlay" aria-hidden="true">
+      <section class="recipe-view" role="dialog" aria-modal="true" aria-labelledby="recipe-view-title">
+        <button id="close-recipe-view" class="close-recipe-view" type="button" aria-label="Close recipe">×</button>
+        <div class="recipe-view-left">
+          <p id="recipe-view-location" class="recipe-view-location"></p>
+          <h2 id="recipe-view-title"></h2>
+          <p id="recipe-view-submitter" class="recipe-view-submitter" hidden></p>
+          <div id="recipe-view-photos" class="recipe-view-photos"></div>
+          <h3>Ingredients</h3>
+          <p id="recipe-view-ingredients" class="recipe-view-text"></p>
+        </div>
+        <div class="recipe-view-right">
+          <h3>Instructions</h3>
+          <p id="recipe-view-instructions" class="recipe-view-text"></p>
+        </div>
+      </section>
+    </div>
     <!-- NPC Introduction -->
 <div id="intro-overlay" class="intro-overlay" hidden>
   <div class="dialogue-box">
