@@ -1,11 +1,34 @@
 import * as maplibregl from "https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs";
 
+const MINIMUM_MAP_ZOOM = 1.6;
+const REGION_LABEL_ZOOM = 3;
 const styleResponse = await fetch("https://demotiles.maplibre.org/style.json");
 const style = await styleResponse.json();
 style.layers = style.layers.filter((layer) => layer.id !== "geolines" && layer.id !== "geolines-label");
+style.layers = style.layers.map((layer) => (
+  layer.id === "countries-label"
+    ? { ...layer, minzoom: REGION_LABEL_ZOOM, layout: { ...layer.layout, visibility: "none" } }
+    : layer
+));
 
-const map = new maplibregl.Map({ container: "map", style, center: [0, 20], zoom: 1.5 });
+const map = new maplibregl.Map({
+  container: "map",
+  style,
+  center: [0, 20],
+  zoom: MINIMUM_MAP_ZOOM,
+  minZoom: MINIMUM_MAP_ZOOM,
+});
 map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+let regionLabelsVisible = false;
+function updateRegionLabelVisibility() {
+  const shouldShow = map.getZoom() >= REGION_LABEL_ZOOM;
+  if (shouldShow === regionLabelsVisible) return;
+  regionLabelsVisible = shouldShow;
+  map.setLayoutProperty("countries-label", "visibility", shouldShow ? "visible" : "none");
+}
+map.on("load", updateRegionLabelVisibility);
+map.on("zoom", updateRegionLabelVisibility);
 
 const form = document.querySelector("#recipe-form");
 const status = document.querySelector("#form-status");
