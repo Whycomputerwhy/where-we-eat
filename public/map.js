@@ -2,6 +2,8 @@ import * as maplibregl from "https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
 
 const MINIMUM_MAP_ZOOM = 1.6;
 const REGION_LABEL_ZOOM = 3;
+const PIN_SPREAD_START = 42;
+const PIN_SPREAD_GAP = 28;
 const styleResponse = await fetch("https://demotiles.maplibre.org/style.json");
 const style = await styleResponse.json();
 style.layers = style.layers.filter((layer) => layer.id !== "geolines" && layer.id !== "geolines-label");
@@ -128,7 +130,7 @@ function spreadOverlappingPins(recipes) {
   return [...groups.values()].flatMap((group) => group.map((recipe, index) => {
     if (group.length === 1) return { recipe, offset: [0, 0] };
     const angle = index * 2.4;
-    const radius = 22 + Math.sqrt(index) * 14;
+    const radius = PIN_SPREAD_START + Math.sqrt(index) * PIN_SPREAD_GAP;
     return {
       recipe,
       offset: [Math.cos(angle) * radius, Math.sin(angle) * radius],
