@@ -2,8 +2,10 @@ import * as maplibregl from "https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
 
 const MINIMUM_MAP_ZOOM = 1.6;
 const REGION_LABEL_ZOOM = 3;
-const PIN_SPREAD_START = 42;
-const PIN_SPREAD_GAP = 28;
+const PIN_GROUP_DISTANCE = 36;
+const DEFAULT_PIN_WIDTH = 27;
+const MAX_PIN_OVERLAP = 0.8;
+const PIN_SEPARATION = DEFAULT_PIN_WIDTH * (1 - MAX_PIN_OVERLAP);
 const styleResponse = await fetch("https://demotiles.maplibre.org/style.json");
 const style = await styleResponse.json();
 style.layers = style.layers.filter((layer) => layer.id !== "geolines" && layer.id !== "geolines-label");
@@ -119,21 +121,36 @@ function closeRecipeOverlay() {
 }
 
 function spreadOverlappingPins(recipes) {
-  const groups = new Map();
+  const worldSize = 512 * (2 ** MINIMUM_MAP_ZOOM);
+  const groups = [];
   for (const recipe of recipes) {
-    const key = `${Number(recipe.longitude).toFixed(5)},${Number(recipe.latitude).toFixed(5)}`;
-    const group = groups.get(key) || [];
-    group.push(recipe);
-    groups.set(key, group);
+    const longitude = Number(recipe.longitude);
+    const latitude = Math.max(-85.051129, Math.min(85.051129, Number(recipe.latitude)));
+    const x = ((longitude + 180) / 360) * worldSize;
+    const y = ((1 - Math.log(Math.tan((latitude * Math.PI) / 180) + 1 / Math.cos((latitude * Math.PI) / 180)) / Math.PI) / 2) * worldSize;
+    const point = { recipe, x, y };
+    let group = groups.find((candidate) => candidate.some((other) => (
+      Math.hypot(point.x - other.x, point.y - other.y) < PIN_GROUP_DISTANCE
+    )));
+    if (!group) {
+      group = [];
+      groups.push(group);
+    }
+    group.push(point);
   }
 
-  return [...groups.values()].flatMap((group) => group.map((recipe, index) => {
+  return groups.flatMap((group) => group.map(({ recipe }, index) => {
     if (group.length === 1) return { recipe, offset: [0, 0] };
-    const angle = index * 2.4;
-    const radius = PIN_SPREAD_START + Math.sqrt(index) * PIN_SPREAD_GAP;
+    const columns = Math.ceil(Math.sqrt(group.length));
+    const rows = Math.ceil(group.length / columns);
+    const column = index % columns;
+    const row = Math.floor(index / columns);
     return {
       recipe,
-      offset: [Math.cos(angle) * radius, Math.sin(angle) * radius],
+      offset: [
+        (column - (columns - 1) / 2) * PIN_SEPARATION,
+        (row - (rows - 1) / 2) * PIN_SEPARATION,
+      ],
     };
   }));
 }
@@ -144,7 +161,7 @@ async function loadRecipes() {
   const recipes = await readJson(response);
   recipeMarkers.forEach((marker) => marker.remove());
   recipeMarkers = spreadOverlappingPins(recipes).map(({ recipe, offset }) => {
-    const marker = new maplibregl.Marker({ offset })
+    const marker = new maplibregl.Marker({ anchor: "bottom", offset })
       .setLngLat([recipe.longitude, recipe.latitude])
       .addTo(map);
     marker.getElement().setAttribute("aria-label", `View ${recipe.recipe_name}`);
@@ -195,7 +212,7 @@ async function searchLocations(kind, query, countryCode) {
 function showSelectedCity(city) {
   selectedLocation = { lat: city.latitude, lng: city.longitude };
   selectedMarker?.remove();
-  selectedMarker = new maplibregl.Marker({ color: "#d97706" }).setLngLat(selectedLocation).addTo(map);
+  selectedMarker = new maplibregl.Marker({ anchor: "bottom", color: "#d97706" }).setLngLat(selectedLocation).addTo(map);
   map.flyTo({ center: selectedLocation, zoom: 5 });
 }
 
