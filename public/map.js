@@ -8,12 +8,32 @@ const MAX_PIN_OVERLAP = 0.8;
 const PIN_SEPARATION = DEFAULT_PIN_WIDTH * (1 - MAX_PIN_OVERLAP);
 const styleResponse = await fetch("https://demotiles.maplibre.org/style.json");
 const style = await styleResponse.json();
-style.layers = style.layers.filter((layer) => layer.id !== "geolines" && layer.id !== "geolines-label");
-style.layers = style.layers.map((layer) => (
-  layer.id === "countries-label"
-    ? { ...layer, minzoom: REGION_LABEL_ZOOM, layout: { ...layer.layout, visibility: "none" } }
-    : layer
-));
+const HIDDEN_LAYERS = new Set([
+  "crimea-fill",
+  "geolines",
+  "geolines-label",
+]);
+style.layers = style.layers
+  .filter((layer) => !HIDDEN_LAYERS.has(layer.id))
+  .map((layer) => {
+    if (layer.id === "countries-fill") {
+      return { ...layer, paint: { ...layer.paint, "fill-color": "#c8e6a0" } };
+    }
+    if (layer.id === "countries-boundary") {
+      return { ...layer, paint: { ...layer.paint, "line-color": "rgb(148, 183, 132)" } };
+    }
+    if (layer.id === "coastline") {
+      return { ...layer, paint: { ...layer.paint, "line-color": "rgba(255, 255, 255, 0)" } };
+    }
+    if (layer.id === "countries-label") {
+      return {
+        ...layer,
+        minzoom: REGION_LABEL_ZOOM,
+        layout: { ...layer.layout, "text-field": "{NAME}", visibility: "none" },
+      };
+    }
+    return layer;
+  });
 
 const map = new maplibregl.Map({
   container: "map",
