@@ -29,7 +29,16 @@ style.layers = style.layers
       return {
         ...layer,
         minzoom: REGION_LABEL_ZOOM,
-        layout: { ...layer.layout, "text-field": "{NAME}", visibility: "none" },
+        layout: {
+  ...layer.layout,
+  "text-field": [
+    "case",
+    ["==", ["get", "NAME"], "China"],
+    "Mainland China",
+    ["get", "NAME"]
+  ],
+  visibility: "none"
+},
       };
     }
     return layer;
